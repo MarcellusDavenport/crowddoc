@@ -28,15 +28,23 @@ chrome.runtime.onInstalled.addListener(function () {
     { title: 'Oops', parentId: 999, id: 'errorItem' },
     function () {
       if (chrome.runtime.lastError) {
-        console.log('Got expected error: ' + chrome.runtime.lastError.message);
+        console.log('[main.js] Got expected error: ' + chrome.runtime.lastError.message);
       }
     }
   );
 });
 
+// Add listener to handle context menu click
 chrome.contextMenus.onClicked.addListener(function (info, tab) {
     if (info.menuItemId === 'selection') {
-      // Open the popup when the context menu item is clicked
-      chrome.action.openPopup();
+      // Get the selected text
+      let selectedText = info.selectionText;
+  
+      // Send message to popup.js to store the selected text
+      chrome.storage.local.set({ selectedText: selectedText }, function () {
+        console.log('[main.js] Selected text saved:', selectedText);
+        // Open the popup to allow the user to enter the link
+        chrome.action.openPopup();
+      });
     }
-});
+  });
