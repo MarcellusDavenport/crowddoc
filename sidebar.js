@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('linkForm');
     const titleInput = document.getElementById('title');
     const linkInput = document.getElementById('link');
+    const languageSelect = document.getElementById('language');
     const linksContainer = document.getElementById('linksContainer');
 
     // Retrieve the current URL from storage
@@ -14,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
             chrome.storage.local.get([currentUrl], function(data) {
                 const links = data[currentUrl] || [];
                 links.forEach(linkObj => {
-                    addLinkToDisplay(linkObj.title, linkObj.link);
+                    addLinkToDisplay(linkObj.title, linkObj.link, linkObj.language);
                 });
             });
         }
@@ -26,29 +27,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const title = titleInput.value.trim();
         const link = linkInput.value.trim();
+        const language = languageSelect.value;
         const currentUrl = document.getElementById('url').textContent;
 
-        if (title && link && currentUrl !== 'No URL available') {
+        if (title && link && language && currentUrl !== 'No URL available') {
             // Save new link under the current URL
             chrome.storage.local.get([currentUrl], function(data) {
                 const links = data[currentUrl] || [];
-                links.push({ title, link });
+                links.push({ title, link, language });
                 chrome.storage.local.set({ [currentUrl]: links }, function() {
-                    console.log('Link saved:', title, link);
-                    addLinkToDisplay(title, link);
+                    console.log('Link saved:', title, link, language);
+                    addLinkToDisplay(title, link, language);
                 });
             });
 
             // Clear form
             titleInput.value = '';
             linkInput.value = '';
+            languageSelect.value = '';
         }
     });
 
-    function addLinkToDisplay(title, link) {
+    function addLinkToDisplay(title, link, language) {
         const entry = document.createElement('div');
         entry.className = 'entry';
-        entry.innerHTML = `<a href="${link}" target="_blank">${title}</a>`;
+        entry.innerHTML = `<a href="${link}" target="_blank">${title}</a> <br> <small>Language: ${language}</small>`;
         linksContainer.appendChild(entry);
     }
 });
