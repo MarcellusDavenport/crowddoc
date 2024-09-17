@@ -6,12 +6,44 @@
         body {
             font-family: Arial, sans-serif;
             padding: 10px;
+            max-width: 300px;
+        }
+        .entry {
+            margin-bottom: 10px;
+        }
+        .entry a {
+            text-decoration: none;
+            color: blue;
+        }
+        .entry a:hover {
+            text-decoration: underline;
+        }
+        .form-group {
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <h1>Current Page URL</h1>
     <p id="url">Loading...</p>
+
+    <h1>Submit a Link</h1>
+    <form id="linkForm">
+        <div class="form-group">
+            <label for="title">Title:</label>
+            <input type="text" id="title" required>
+        </div>
+        <div class="form-group">
+            <label for="link">Link:</label>
+            <input type="url" id="link" required>
+        </div>
+        <button type="submit">Add Link</button>
+    </form>
+    <h2>Saved Links</h2>
+    <div id="linksContainer">
+        <!-- Saved links will be dynamically added here -->
+    </div>
+
     <script src="sidebar.js"></script>
 </body>
 </html>
