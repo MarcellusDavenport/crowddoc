@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
             chrome.storage.local.get([currentUrl + '_questions'], function(data) {
                 const questions = data[currentUrl + '_questions'] || [];
                 questions.forEach(questionObj => {
-                    addQuestionToDisplay(questionObj.question);
+                    addQuestionToDisplay(questionObj.question, questionObj.answer, questionObj);
                 });
             });
         }
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const questions = data[activeTab.url + '_questions'] || [];
                     questionsContainer.innerHTML = '';  // Clear previous entries
                     questions.forEach(questionObj => {
-                        addQuestionToDisplay(questionObj.question);
+                        addQuestionToDisplay(questionObj.question, questionObj.answer, questionObj);
                     });
                 });
             }
@@ -127,10 +127,10 @@ document.addEventListener('DOMContentLoaded', function () {
             // Save new question under the current URL
             chrome.storage.local.get([currentUrl + '_questions'], function(data) {
                 const questions = data[currentUrl + '_questions'] || [];
-                questions.push({ question });
+                questions.push({ question, answer: null });
                 chrome.storage.local.set({ [currentUrl + '_questions']: questions }, function() {
                     console.log('Question saved:', question);
-                    addQuestionToDisplay(question);
+                    addQuestionToDisplay(question, null, questions[questions.length - 1]);
                 });
             });
 
@@ -146,10 +146,66 @@ document.addEventListener('DOMContentLoaded', function () {
         linksContainer.appendChild(entry);
     }
 
-    function addQuestionToDisplay(question) {
+    function addQuestionToDisplay(question, answer, questionObj) {
         const entry = document.createElement('div');
         entry.className = 'entry';
-        entry.textContent = question;
+        entry.innerHTML = `
+            <p>${question}</p>
+            ${answer ? `<p><strong>Answer:</strong> ${answer}</p>` : ''}
+            <button class="answerButton">Answer</button>
+            <div class="answerField" style="display: none;">
+                <textarea class="answerInput" placeholder="Enter your answer"></textarea>
+                <button class="submitAnswerButton">Submit</button>
+            </div>
+        `;
+
+        const answerButton = entry.querySelector('.answerButton');
+        const answerField = entry.querySelector('.answerField');
+        const submitAnswerButton = entry.querySelector('.submitAnswerButton');
+        const answerInput = entry.querySelector('.answerInput');
+
+        // Show the answer field when the "Answer" button is clicked
+        answerButton.addEventListener('click', function() {
+            answerField.style.display = 'block';
+        });
+
+        // Handle answer submission
+        submitAnswerButton.addEventListener('click', function() {
+            const answerText = answerInput.value.trim();
+            const currentUrl = document.getElementById('url').textContent;
+
+            if (answerText != "" && currentUrl !== 'No URL available') {
+                chrome.storage.local.get([currentUrl + '_questions'], function(data) {
+                    const questions = data[currentUrl + '_questions'] || [];
+                    const index = questions.findIndex(q => q.question === question);
+                    if (index !== -1) {
+                        // Ensure the answers array exists in the question object
+                        if (!questions[index].answers) {
+                            questions[index].answers = []; // Initialize answers array if it doesn't exist
+                        }
+                        
+                        // Push the new answer into the answers array
+                        questions[index].answers.push({ answer: answerText });
+
+                        //console.log(questions)
+            
+                        // Save the updated questions back to storage
+                        chrome.storage.local.set({ [currentUrl + '_questions']: questions }, function() {
+                            console.log('Answer saved:', answerText);
+            
+                            // Display the new answer immediately without reloading
+                            const answerDisplay = document.createElement('p');
+                            answerDisplay.innerHTML = `<strong>Answer:</strong> ${answerText}`;
+                            entry.querySelector('.answerField').before(answerDisplay);
+            
+                            // Hide the answer field after submission
+                            answerField.style.display = 'none';
+                        });
+                    }
+                });
+            }
+        });
+
         questionsContainer.appendChild(entry);
     }
 });
