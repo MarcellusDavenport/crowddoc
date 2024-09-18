@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
             chrome.storage.local.get([currentUrl + '_questions'], function(data) {
                 const questions = data[currentUrl + '_questions'] || [];
                 questions.forEach(questionObj => {
-                    addQuestionToDisplay(questionObj.question, questionObj.answer, questionObj);
+                    addQuestionToDisplay(questionObj.question, questionObj.answers, questionObj);
                 });
             });
         }
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const questions = data[activeTab.url + '_questions'] || [];
                     questionsContainer.innerHTML = '';  // Clear previous entries
                     questions.forEach(questionObj => {
-                        addQuestionToDisplay(questionObj.question, questionObj.answer, questionObj);
+                        addQuestionToDisplay(questionObj.question, questionObj.answers, questionObj);
                     });
                 });
             }
@@ -146,38 +146,52 @@ document.addEventListener('DOMContentLoaded', function () {
         linksContainer.appendChild(entry);
     }
 
-    function addQuestionToDisplay(question, answer, questionObj) {
+    function addQuestionToDisplay(question, answers, questionObj) {
         const entry = document.createElement('div');
         entry.className = 'entry';
-        entry.innerHTML = `
-            <p>${question}</p>
-            ${answer ? `<p><strong>Answer:</strong> ${answer}</p>` : ''}
+    
+        // Display the question
+        let htmlContent = `<p>${question}</p>`;
+    
+        // Loop through the answers array and display each answer
+        if (answers != null && answers != undefined && answers.length > 0) {
+            htmlContent += `<p><strong>Answers:</strong></p>`;
+            answers.forEach(answerObj => {
+                htmlContent += `<p>- ${answerObj.answer}</p>`;
+            });
+        }
+    
+        // Add answer button and input field for new answers
+        htmlContent += `
             <button class="answerButton">Answer</button>
             <div class="answerField" style="display: none;">
                 <textarea class="answerInput" placeholder="Enter your answer"></textarea>
                 <button class="submitAnswerButton">Submit</button>
             </div>
         `;
-
+    
+        entry.innerHTML = htmlContent;
+    
         const answerButton = entry.querySelector('.answerButton');
         const answerField = entry.querySelector('.answerField');
         const submitAnswerButton = entry.querySelector('.submitAnswerButton');
         const answerInput = entry.querySelector('.answerInput');
-
+    
         // Show the answer field when the "Answer" button is clicked
         answerButton.addEventListener('click', function() {
             answerField.style.display = 'block';
         });
-
+    
         // Handle answer submission
         submitAnswerButton.addEventListener('click', function() {
             const answerText = answerInput.value.trim();
             const currentUrl = document.getElementById('url').textContent;
-
-            if (answerText != "" && currentUrl !== 'No URL available') {
+    
+            if (answerText !== "" && currentUrl !== 'No URL available') {
                 chrome.storage.local.get([currentUrl + '_questions'], function(data) {
                     const questions = data[currentUrl + '_questions'] || [];
                     const index = questions.findIndex(q => q.question === question);
+                    
                     if (index !== -1) {
                         // Ensure the answers array exists in the question object
                         if (!questions[index].answers) {
@@ -186,18 +200,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         
                         // Push the new answer into the answers array
                         questions[index].answers.push({ answer: answerText });
-
-                        //console.log(questions)
-            
+    
                         // Save the updated questions back to storage
                         chrome.storage.local.set({ [currentUrl + '_questions']: questions }, function() {
                             console.log('Answer saved:', answerText);
-            
+    
                             // Display the new answer immediately without reloading
                             const answerDisplay = document.createElement('p');
-                            answerDisplay.innerHTML = `<strong>Answer:</strong> ${answerText}`;
+                            answerDisplay.innerHTML = `- ${answerText}`;
                             entry.querySelector('.answerField').before(answerDisplay);
-            
+    
                             // Hide the answer field after submission
                             answerField.style.display = 'none';
                         });
@@ -205,7 +217,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
         });
-
+    
         questionsContainer.appendChild(entry);
     }
+    
 });
