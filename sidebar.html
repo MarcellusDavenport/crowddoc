@@ -63,7 +63,7 @@
             font-size: 20px;
             margin-bottom: 15px;
         }
-        #linksContainer {
+        #linksContainer, #questionsContainer {
             margin-top: 20px;
         }
 
@@ -107,19 +107,15 @@
 
     <!-- Code Samples Content -->
     <div id="codeSamplesSection" class="tab-content active">
-        <b>Code samples for</b>
         <p id="url">Loading...</p>
 
         <div class="container">
-            <h1 class="form-title">Submit a Link</h1>
             <form id="linkForm" class="form">
                 <div class="form-group">
-                    <label for="title" class="form-label">Title</label>
-                    <input type="text" id="title" class="form-input" required>
+                    <input type="url" id="link" class="form-input" required placeholder="Link to code sample">
                 </div>
                 <div class="form-group">
-                    <label for="link" class="form-label">Link</label>
-                    <input type="url" id="link" class="form-input" required>
+                    <input type="text" id="title" class="form-input" required placeholder="Title">
                 </div>
                 <div class="form-group">
                     <label for="language" class="form-label">Programming Language</label>
@@ -133,10 +129,10 @@
                         <option value="Ruby">Ruby</option>
                     </select>
                 </div>
-                <button type="submit" class="form-button">Add Link</button>
+                <button type="submit" class="form-button">Save</button>
             </form>
         </div>
-        <h2>Saved Links</h2>
+        <h2>Shared Code Samples</h2>
         <div id="linksContainer">
             <!-- Saved links will be dynamically added here -->
         </div>
@@ -144,8 +140,17 @@
 
     <!-- Questions Content -->
     <div id="questionsSection" class="tab-content">
-        <h2>Questions</h2>
-        <p>Questions content goes here.</p>
+        <h2>Ask a Question</h2>
+        <form id="questionForm" class="form">
+            <div class="form-group">
+                <textarea id="questionText" class="form-input" required placeholder="Enter your question"></textarea>
+            </div>
+            <button type="submit" class="form-button">Submit Question</button>
+        </form>
+        <h2>Submitted Questions</h2>
+        <div id="questionsContainer">
+            <!-- Saved questions will be dynamically added here -->
+        </div>
     </div>
 
     <script src="sidebar.js"></script>

@@ -5,7 +5,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const languageSelect = document.getElementById('language');
     const linksContainer = document.getElementById('linksContainer');
     const getCurrentUrlButton = document.getElementById('getCurrentUrlButton');
-    
+
+    // Elements for questions section
+    const questionForm = document.getElementById('questionForm');
+    const questionText = document.getElementById('questionText');
+    const questionsContainer = document.getElementById('questionsContainer');
+
     // Elements for tab navigation
     const codeSamplesTab = document.getElementById('codeSamplesTab');
     const questionsTab = document.getElementById('questionsTab');
@@ -45,6 +50,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     addLinkToDisplay(linkObj.title, linkObj.link, linkObj.language);
                 });
             });
+
+            // Load and display saved questions for the current URL
+            chrome.storage.local.get([currentUrl + '_questions'], function(data) {
+                const questions = data[currentUrl + '_questions'] || [];
+                questions.forEach(questionObj => {
+                    addQuestionToDisplay(questionObj.question);
+                });
+            });
         }
     });
 
@@ -56,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('url').textContent = activeTab.url;
                 chrome.storage.local.set({ currentUrl: activeTab.url });
                 
-                // Load and display saved links for the newly retrieved URL
+                // Load and display saved links and questions for the newly retrieved URL
                 chrome.storage.local.get([activeTab.url], function(data) {
                     const links = data[activeTab.url] || [];
                     linksContainer.innerHTML = '';  // Clear previous entries
@@ -64,11 +77,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         addLinkToDisplay(linkObj.title, linkObj.link, linkObj.language);
                     });
                 });
+
+                chrome.storage.local.get([activeTab.url + '_questions'], function(data) {
+                    const questions = data[activeTab.url + '_questions'] || [];
+                    questionsContainer.innerHTML = '';  // Clear previous entries
+                    questions.forEach(questionObj => {
+                        addQuestionToDisplay(questionObj.question);
+                    });
+                });
             }
         });
     });
 
-    // Handle form submission
+    // Handle form submission for code samples
     form.addEventListener('submit', function(event) {
         event.preventDefault();
 
@@ -95,10 +116,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Handle form submission for questions
+    questionForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const question = questionText.value.trim();
+        const currentUrl = document.getElementById('url').textContent;
+
+        if (question && currentUrl !== 'No URL available') {
+            // Save new question under the current URL
+            chrome.storage.local.get([currentUrl + '_questions'], function(data) {
+                const questions = data[currentUrl + '_questions'] || [];
+                questions.push({ question });
+                chrome.storage.local.set({ [currentUrl + '_questions']: questions }, function() {
+                    console.log('Question saved:', question);
+                    addQuestionToDisplay(question);
+                });
+            });
+
+            // Clear form
+            questionText.value = '';
+        }
+    });
+
     function addLinkToDisplay(title, link, language) {
         const entry = document.createElement('div');
         entry.className = 'entry';
         entry.innerHTML = `<a href="${link}" target="_blank">${title}</a> <br> <small>Language: ${language}</small>`;
         linksContainer.appendChild(entry);
+    }
+
+    function addQuestionToDisplay(question) {
+        const entry = document.createElement('div');
+        entry.className = 'entry';
+        entry.textContent = question;
+        questionsContainer.appendChild(entry);
     }
 });
