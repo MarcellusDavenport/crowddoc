@@ -149,10 +149,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function addQuestionToDisplay(question, answers, questionObj) {
         const entry = document.createElement('div');
         entry.className = 'entry';
-    
+        
         // Display the question
         let htmlContent = `<p>${question}</p>`;
-    
+        
         // Loop through the answers array and display each answer
         if (answers != null && answers != undefined && answers.length > 0) {
             htmlContent += `<p><strong>Answers:</strong></p>`;
@@ -160,33 +160,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 htmlContent += `<p>- ${answerObj.answer}</p>`;
             });
         }
-    
+        
         // Add answer button and input field for new answers
         htmlContent += `
             <button class="answerButton">Answer</button>
             <div class="answerField" style="display: none;">
                 <textarea class="answerInput" placeholder="Enter your answer"></textarea>
                 <button class="submitAnswerButton">Submit</button>
+                <button class="cancelAnswerButton" style="background-color: red;margin-left: 10px;">Cancel</button>
             </div>
         `;
-    
+        
         entry.innerHTML = htmlContent;
-    
+        
         const answerButton = entry.querySelector('.answerButton');
         const answerField = entry.querySelector('.answerField');
         const submitAnswerButton = entry.querySelector('.submitAnswerButton');
+        const cancelAnswerButton = entry.querySelector('.cancelAnswerButton');
         const answerInput = entry.querySelector('.answerInput');
-    
+        
         // Show the answer field when the "Answer" button is clicked
         answerButton.addEventListener('click', function() {
-            answerField.style.display = 'block';
+            answerField.style.display = 'block'; // Show the answer field
         });
-    
+        
         // Handle answer submission
         submitAnswerButton.addEventListener('click', function() {
             const answerText = answerInput.value.trim();
             const currentUrl = document.getElementById('url').textContent;
-    
+        
             if (answerText !== "" && currentUrl !== 'No URL available') {
                 chrome.storage.local.get([currentUrl + '_questions'], function(data) {
                     const questions = data[currentUrl + '_questions'] || [];
@@ -200,16 +202,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         
                         // Push the new answer into the answers array
                         questions[index].answers.push({ answer: answerText });
-    
+        
                         // Save the updated questions back to storage
                         chrome.storage.local.set({ [currentUrl + '_questions']: questions }, function() {
                             console.log('Answer saved:', answerText);
-    
+        
                             // Display the new answer immediately without reloading
                             const answerDisplay = document.createElement('p');
                             answerDisplay.innerHTML = `- ${answerText}`;
                             entry.querySelector('.answerField').before(answerDisplay);
-    
+        
                             // Hide the answer field after submission
                             answerField.style.display = 'none';
                         });
@@ -218,7 +220,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     
+        // Handle cancel button click to hide the answer field
+        cancelAnswerButton.addEventListener('click', function() {
+            answerField.style.display = 'none'; // Hide the answerField div when "Cancel" is clicked
+        });
+        
         questionsContainer.appendChild(entry);
     }
+    
+    
     
 });
