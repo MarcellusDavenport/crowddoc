@@ -127,10 +127,10 @@ document.addEventListener('DOMContentLoaded', function () {
             // Save new question under the current URL
             chrome.storage.local.get([currentUrl + '_questions'], function(data) {
                 const questions = data[currentUrl + '_questions'] || [];
-                questions.push({ question, answer: null });
+                questions.push({ question, answers: [] });
                 chrome.storage.local.set({ [currentUrl + '_questions']: questions }, function() {
                     console.log('Question saved:', question);
-                    addQuestionToDisplay(question, null, questions[questions.length - 1]);
+                    addQuestionToDisplay(question, [], questions[questions.length - 1]);
                 });
             });
 
@@ -146,28 +146,40 @@ document.addEventListener('DOMContentLoaded', function () {
         linksContainer.appendChild(entry);
     }
 
+    // Display the questions and their answers in a more appealing format
     function addQuestionToDisplay(question, answers, questionObj) {
         const entry = document.createElement('div');
         entry.className = 'entry';
         
         // Display the question
-        let htmlContent = `<p>${question}</p>`;
+        let htmlContent = `<p style="font-size: 18px">${question}</p>`;
+
+        // Count the number of answers and display it with correct singular/plural
+        const answerCount = answers ? answers.length : 0;
+        const answerText = answerCount === 1 ? 'Answer' : 'Answers';
+        htmlContent += `<p class="answer-heading"><strong>${answerCount} ${answerText}</strong></p>`;
+
         
-        // Loop through the answers array and display each answer
-        if (answers != null && answers != undefined && answers.length > 0) {
-            htmlContent += `<p><strong>Answers:</strong></p>`;
+        // Loop through the answers array and display each answer as a list item
+        if (answers && answers.length > 0) {
+            htmlContent += `<ul class="answer-list">`;
             answers.forEach(answerObj => {
-                htmlContent += `<p>- ${answerObj.answer}</p>`;
+                htmlContent += `
+                    <li>
+                        <p>${answerObj.answer}</p>
+                    </li>
+                `;
             });
+            htmlContent += `</ul>`;
         }
         
         // Add answer button and input field for new answers
         htmlContent += `
-            <button class="answerButton">Answer</button>
+            <button class="answerButton">Add Answer</button>
             <div class="answerField" style="display: none;">
                 <textarea class="answerInput" placeholder="Enter your answer"></textarea>
                 <button class="submitAnswerButton">Submit</button>
-                <button class="cancelAnswerButton" style="background-color: red;margin-left: 10px;">Cancel</button>
+                <button class="cancelAnswerButton" style="background-color: #c0392b;margin-left: 10px;">Cancel</button>
             </div>
         `;
         
@@ -182,6 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Show the answer field when the "Answer" button is clicked
         answerButton.addEventListener('click', function() {
             answerField.style.display = 'block'; // Show the answer field
+            answerButton.style.display = 'none'; // Hide the answer button while answering
         });
         
         // Handle answer submission
@@ -195,39 +208,38 @@ document.addEventListener('DOMContentLoaded', function () {
                     const index = questions.findIndex(q => q.question === question);
                     
                     if (index !== -1) {
-                        // Ensure the answers array exists in the question object
                         if (!questions[index].answers) {
-                            questions[index].answers = []; // Initialize answers array if it doesn't exist
+                            questions[index].answers = [];
                         }
-                        
-                        // Push the new answer into the answers array
+        
                         questions[index].answers.push({ answer: answerText });
         
-                        // Save the updated questions back to storage
                         chrome.storage.local.set({ [currentUrl + '_questions']: questions }, function() {
                             console.log('Answer saved:', answerText);
         
-                            // Display the new answer immediately without reloading
-                            const answerDisplay = document.createElement('p');
-                            answerDisplay.innerHTML = `- ${answerText}`;
-                            entry.querySelector('.answerField').before(answerDisplay);
+                            const answerDisplay = document.createElement('li');
+                            answerDisplay.innerHTML = `<p>${answerText}</p>`;
+                            entry.querySelector('.answer-list').appendChild(answerDisplay);
         
                             // Hide the answer field after submission
                             answerField.style.display = 'none';
+                            answerButton.style.display = 'block'; // Show the answer button again
+        
+                            // Optionally, you can clear the answer input field
+                            answerInput.value = '';
                         });
                     }
                 });
             }
         });
+        
     
-        // Handle cancel button click to hide the answer field
+        // Handle cancel button click to hide the answer field and show the answer button again
         cancelAnswerButton.addEventListener('click', function() {
             answerField.style.display = 'none'; // Hide the answerField div when "Cancel" is clicked
+            answerButton.style.display = 'block'; // Show the answer button again
         });
         
         questionsContainer.appendChild(entry);
     }
-    
-    
-    
 });
